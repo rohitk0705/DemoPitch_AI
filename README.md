@@ -28,10 +28,11 @@ DemoPitch AI is a single-page helper for hackathon teams that need a polished, s
 
 ## Configure the AI API key & model
 1. Paste your Gemini API key into the first field in the UI. It lives only in browser memory for that tab/session.
-2. Pick the desired Gemini model (`gemini-1.5-flash`, `gemini-1.5-pro`, etc.) from the dropdown right below the hackathon name field.
-3. Optionally tweak the defaults (`DEFAULT_MODEL`, `DEFAULT_HACKATHON`) inside `script.js` if you want the form to preload different values.
+2. Pick the desired Gemini model (`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-3-flash-preview`, `gemma-3-12b-it`, etc.) from the dropdown right below the hackathon name field—the select is now grouped by family so it mirrors what `ListModels` returns for your key.
+3. Optionally tweak the defaults (`DEFAULT_MODEL`, `DEFAULT_HACKATHON`) inside `script.js` if you want the form to preload different values (the project now ships with `gemini-2.5-flash`).
 4. For production/persistent hosting, route the key through a proxy or server-side secret store instead of shipping it in the client.
 5. If the key is missing or the request fails, the app auto-generates a deterministic fallback script so you can still present.
+6. When Google rolls out new API versions, the client now auto-retries between `v1` and `v1beta`, tries common `-latest`/`-preview`/`-001` suffixes, and surfaces suggestions from `ListModels` if your chosen alias disappears.
 
 ## Example input/output
 **Input**

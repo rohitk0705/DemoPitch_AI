@@ -8,13 +8,28 @@ const apiKeyInput = document.getElementById("apiKey");
 const modelSelect = document.getElementById("model");
 const themeToggleBtn = document.getElementById("theme-toggle");
 
-const DEFAULT_MODEL = "gemini-1.5-flash";
+const DEFAULT_MODEL = "gemini-2.5-flash";
 const DEFAULT_HACKATHON = "DemoPitch AI Hackathon";
 const WORDS_PER_MINUTE = 130;
 const TARGET_MINUTES = 2;
 const THEME_STORAGE_KEY = "demopitch-theme";
 const THEMES = { LIGHT: "light", DARK: "dark" };
 const DEFAULT_THEME = THEMES.DARK;
+const API_VERSIONS = ["v1", "v1beta"]; // Prefer GA, retry beta if the model only exists there.
+const MODEL_SUFFIXES = [
+  "",
+  "-latest",
+  "-preview",
+  "-preview-tts",
+  "-preview-image",
+  "-preview-09-2025",
+  "-preview-tts-09-2025",
+  "-preview-02-05",
+  "-001",
+  "-002",
+  "-003",
+];
+const modelCatalogCache = new Map();
 
 initializeTheme();
 
@@ -37,8 +52,10 @@ form.addEventListener("submit", async (event) => {
   let usedFallback = false;
 
   try {
-    scriptText = await requestGeminiScript(pitchContext, apiKey, model);
-    setStatus(`Success! Script generated via ${model}.`, "success");
+    const { text, apiVersion, resolvedModel } = await requestGeminiScript(pitchContext, apiKey, model);
+    scriptText = text;
+    const modelLabel = resolvedModel && resolvedModel !== model ? `${model} → ${resolvedModel}` : resolvedModel || model;
+    setStatus(`Success! Script generated via ${modelLabel} (${apiVersion}).`, "success");
   } catch (error) {
     usedFallback = true;
     scriptText = buildFallbackScript(pitchContext);
@@ -91,7 +108,35 @@ async function requestGeminiScript(payload, apiKey, model) {
 
   const prompt = buildPrompt(payload);
   const selectedModel = model || modelSelect?.value || DEFAULT_MODEL;
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+  const candidateModels = buildModelCandidates(selectedModel);
+  let lastError;
+
+  for (const apiVersion of API_VERSIONS) {
+    for (const candidate of candidateModels) {
+      try {
+        const text = await callGeminiGenerate(prompt, candidate, apiKey, apiVersion);
+        return { text, apiVersion, resolvedModel: candidate };
+      } catch (error) {
+        lastError = error;
+        if (!isModelAvailabilityError(error)) {
+          throw error;
+        }
+      }
+    }
+  }
+
+  const hints = await suggestAlternateModels(apiKey, selectedModel).catch(() => []);
+  if (hints.length) {
+    const tip = hints.slice(0, 3).join(", ");
+    const reason = lastError?.message || "No compatible Gemini model found.";
+    throw new Error(`${reason} Try one of: ${tip}`);
+  }
+
+  throw lastError || new Error("Gemini request failed");
+}
+
+async function callGeminiGenerate(prompt, modelName, apiKey, apiVersion) {
+  const endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${apiKey}`;
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -115,7 +160,10 @@ async function requestGeminiScript(payload, apiKey, model) {
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     const message = errorBody.error?.message || response.statusText;
-    throw new Error(message || "Gemini request failed");
+    const enrichedError = new Error(message || "Gemini request failed");
+    enrichedError.apiVersion = apiVersion;
+    enrichedError.modelName = modelName;
+    throw enrichedError;
   }
 
   const data = await response.json();
@@ -129,6 +177,95 @@ async function requestGeminiScript(payload, apiKey, model) {
   }
 
   return text;
+}
+
+function buildModelCandidates(modelName) {
+  const trimmed = stripModelSuffix(modelName);
+  const variants = new Set([modelName, trimmed]);
+  MODEL_SUFFIXES.forEach((suffix) => {
+    const candidate = suffix ? `${trimmed}${suffix}` : trimmed;
+    variants.add(candidate);
+  });
+  return Array.from(variants).filter(Boolean);
+}
+
+function isModelAvailabilityError(error) {
+  const message = (error?.message || "").toLowerCase();
+  return message.includes("not found") || message.includes("not supported") || message.includes("does not exist");
+}
+
+async function suggestAlternateModels(apiKey, selectedModel) {
+  const families = buildModelFamilies(selectedModel);
+  const suggestions = new Set();
+
+  for (const apiVersion of API_VERSIONS) {
+    try {
+      const catalog = await fetchModelCatalog(apiKey, apiVersion);
+      catalog
+        .filter((name) => families.some((family) => name.startsWith(family)))
+        .forEach((match) => suggestions.add(match));
+      if (suggestions.size) {
+        break;
+      }
+    } catch (error) {
+      console.warn("ListModels failed", error);
+    }
+  }
+
+  return Array.from(suggestions);
+}
+
+async function fetchModelCatalog(apiKey, apiVersion) {
+  if (modelCatalogCache.has(apiVersion)) {
+    return modelCatalogCache.get(apiVersion);
+  }
+
+  const endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models?key=${apiKey}`;
+  const response = await fetch(endpoint);
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const message = errorBody.error?.message || response.statusText;
+    throw new Error(message || "Unable to list Gemini models");
+  }
+
+  const data = await response.json();
+  const models = data.models?.map((entry) => entry.name?.replace(/^models\//, "")) || [];
+  modelCatalogCache.set(apiVersion, models);
+  return models;
+}
+
+function stripModelSuffix(modelName) {
+  let trimmed = modelName;
+  const patterns = [
+    /-latest$/i,
+    /-preview(?:-[a-z0-9-]+)?$/i,
+    /-preview-tts(?:-[a-z0-9-]+)?$/i,
+    /-00[1-9]$/i,
+  ];
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const pattern of patterns) {
+      if (pattern.test(trimmed)) {
+        trimmed = trimmed.replace(pattern, "");
+        changed = true;
+      }
+    }
+  }
+
+  return trimmed;
+}
+
+function buildModelFamilies(modelName) {
+  const trimmed = stripModelSuffix(modelName);
+  const parts = trimmed.split("-");
+  const families = new Set([trimmed]);
+  if (parts.length > 2) {
+    families.add(parts.slice(0, parts.length - 1).join("-"));
+  }
+  return Array.from(families).filter(Boolean);
 }
 
 function buildPrompt({ projectName, problem, solution, techStack, targetUsers, hackathonName }) {

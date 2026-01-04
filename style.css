@@ -164,6 +164,17 @@ select {
   padding-right: 2.5rem;
 }
 
+/* Ensure dropdown text stays legible against system popup backgrounds */
+select option,
+select optgroup {
+  color: var(--text-primary);
+  background-color: var(--panel);
+}
+
+select optgroup {
+  font-weight: 600;
+}
+
 .helper {
   margin: 0;
   font-size: 0.9rem;
