@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>DemoPitch AI · Hackathon Demo Script Generator</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<div class="backdrop" aria-hidden="true"></div>
+		<main class="shell">
+			<header class="hero">
+				<div class="hero-top">
+					<p class="eyebrow">DemoPitch AI</p>
+					<button id="theme-toggle" class="ghost-btn theme-btn" type="button" aria-pressed="false">
+						Switch to bright mode
+					</button>
+				</div>
+				<h1>Turn your project brief into a polished 2-minute demo</h1>
+				<p>
+					Describe the essentials of your hackathon build and let the AI narrator
+					draft an intro-to-outro script tailored for live demos.
+				</p>
+			</header>
+
+			<section class="panel">
+				<form id="pitch-form" novalidate>
+					<div class="field-group">
+						<label for="apiKey">Gemini API key</label>
+						<input
+							id="apiKey"
+							name="apiKey"
+							type="password"
+							placeholder="Paste your runtime key (stored in memory only)"
+							autocomplete="off"
+							spellcheck="false"
+							required
+						/>
+					</div>
+
+					<div class="field-group">
+						<label for="hackathonName">Hackathon name</label>
+						<input
+							id="hackathonName"
+							name="hackathonName"
+							type="text"
+							placeholder="DemoPitch AI Hackathon"
+						/>
+					</div>
+
+					<div class="field-group">
+						<label for="model">Gemini model</label>
+						<select id="model" name="model">
+							<option value="gemini-1.5-flash" selected>gemini-1.5-flash (fast, 1.5)</option>
+							<option value="gemini-1.5-pro">gemini-1.5-pro (general)</option>
+							<option value="gemini-1.0-pro">gemini-1.0-pro (fallback)</option>
+						</select>
+					</div>
+
+					<div class="field-group">
+						<label for="projectName">Project name</label>
+						<input
+							id="projectName"
+							name="projectName"
+							type="text"
+							placeholder="SolarSense"
+							required
+						/>
+					</div>
+
+					<div class="field-group">
+						<label for="problem">Problem statement</label>
+						<textarea
+							id="problem"
+							name="problem"
+							rows="3"
+							placeholder="Energy audits are slow, expensive, and require on-site experts."
+							required
+						></textarea>
+					</div>
+
+					<div class="field-group">
+						<label for="solution">Solution description</label>
+						<textarea
+							id="solution"
+							name="solution"
+							rows="3"
+							placeholder="We auto-detect inefficiencies via IoT sensors and coach teams with AI."
+							required
+						></textarea>
+					</div>
+
+					<div class="field-group">
+						<label for="techStack">Tech stack used</label>
+						<textarea
+							id="techStack"
+							name="techStack"
+							rows="2"
+							placeholder="Supabase, Next.js, Edge Functions, Gemini API, ESP32 sensors"
+							required
+						></textarea>
+					</div>
+
+					<div class="field-group">
+						<label for="targetUsers">Target users</label>
+						<textarea
+							id="targetUsers"
+							name="targetUsers"
+							rows="2"
+							placeholder="Facilities managers at mid-sized campuses and climate startups"
+							required
+						></textarea>
+					</div>
+
+					<p class="helper">
+						Keep the key, hackathon name, and model flexible from this panel. Everything stays
+						in-memory for the current tab, and you can still fine-tune prompts in
+						<span>script.js</span>.
+					</p>
+
+					<button id="generate-btn" type="submit">Generate demo script</button>
+				</form>
+			</section>
+
+			<section class="panel output-panel" aria-live="polite">
+				<div class="output-header">
+					<div>
+						<p class="eyebrow">Script preview</p>
+						<div id="time-badge" class="time-badge" hidden></div>
+					</div>
+					<button id="copy-btn" class="ghost-btn" type="button" disabled>
+						Copy script
+					</button>
+				</div>
+
+				<p id="status" class="status" data-state="info">
+					Your personalized demo script will appear here.
+				</p>
+				<article id="script-output" class="script-block" tabindex="0">
+					<p>
+						Need inspiration? Share the five prompts on the left and DemoPitch AI will
+						stitch together a confident, spoken-style walkthrough.
+					</p>
+				</article>
+			</section>
+		</main>
+
+		<script defer src="script.js"></script>
+	</body>
+</html>
