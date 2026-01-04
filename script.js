@@ -32,6 +32,7 @@ const MODEL_SUFFIXES = [
 const modelCatalogCache = new Map();
 
 initializeTheme();
+enableTextareaAutosize();
 
 themeToggleBtn?.addEventListener("click", () => {
   const current = document.documentElement.getAttribute("data-theme") || THEMES.DARK;
@@ -93,11 +94,30 @@ function collectFormData(formData) {
     model: formData.get("model") || DEFAULT_MODEL,
     hackathonName: (formData.get("hackathonName") || "").trim() || DEFAULT_HACKATHON,
     projectName: formData.get("projectName").trim(),
+    teamName: (formData.get("teamName") || "").trim(),
     problem: formData.get("problem").trim(),
     solution: formData.get("solution").trim(),
     techStack: formData.get("techStack").trim(),
     targetUsers: formData.get("targetUsers").trim(),
   };
+}
+
+function enableTextareaAutosize() {
+  const textareas = form.querySelectorAll("textarea");
+  if (!textareas.length) {
+    return;
+  }
+
+  textareas.forEach((textarea) => {
+    // Keep textarea height synced with current content.
+    const resize = () => {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    };
+
+    textarea.addEventListener("input", resize);
+    resize();
+  });
 }
 
 async function requestGeminiScript(payload, apiKey, model) {
@@ -268,10 +288,11 @@ function buildModelFamilies(modelName) {
   return Array.from(families).filter(Boolean);
 }
 
-function buildPrompt({ projectName, problem, solution, techStack, targetUsers, hackathonName }) {
+function buildPrompt({ projectName, teamName, problem, solution, techStack, targetUsers, hackathonName }) {
   return `You are a confident hackathon presenter preparing a two-minute spoken script for the ${hackathonName} demo stage.
 Structure the script with these titled sections: Introduction, Problem, Solution Walkthrough, Tech Stack, What We Learned, Closing Invitation.
 Use a clear, conversational tone that sounds like live narration.
+Team: ${teamName || "Not provided"}
 Project: ${projectName}
 Problem: ${problem}
 Solution: ${solution}

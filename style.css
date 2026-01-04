@@ -74,7 +74,6 @@ body {
   gap: 1.5rem;
   z-index: 1;
 }
-  transition: background 0.35s ease, border 0.35s ease, box-shadow 0.35s ease;
 
 .hero {
   text-align: left;
@@ -113,6 +112,7 @@ body {
   padding: 1.75rem;
   box-shadow: var(--shadow);
   backdrop-filter: blur(24px);
+  transition: background 0.35s ease, border 0.35s ease, box-shadow 0.35s ease;
 }
 
 form {
@@ -142,6 +142,11 @@ select {
   font-family: inherit;
   transition: border-color 0.2s ease, background 0.2s ease;
   resize: vertical;
+}
+
+textarea {
+  overflow-y: hidden;
+  resize: none;
 }
 
 input:focus,
