@@ -301,10 +301,10 @@ Target Users: ${targetUsers}
 Highlight why the audience should care, keep the pace around 2 minutes (~250-270 words), and end with a strong invite to judges.`;
 }
 
-function buildFallbackScript({ projectName, problem, solution, techStack, targetUsers, hackathonName }) {
+function buildFallbackScript({ projectName, teamName, problem, solution, techStack, targetUsers, hackathonName }) {
   return (
     `Introduction\n` +
-    `Hi everyone at ${hackathonName}, we are thrilled to show you ${projectName}, built in under 48 hours to push what is possible with accessible AI tooling.\n\n` +
+    `Hi everyone at ${hackathonName}, we are thrilled to show you ${projectName} from ${teamName || "our team"}, built in under 48 hours to push what is possible with accessible AI tooling.\n\n` +
     `Problem\n` +
     `${problem}\n\n` +
     `Solution Walkthrough\n` +

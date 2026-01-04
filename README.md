@@ -37,6 +37,7 @@ DemoPitch AI is a single-page helper for hackathon teams that need a polished, s
 ## Example input/output
 **Input**
 - Project name: *SolarSense*
+- Team name: *Team Aurora*
 - Problem: *Energy audits are slow, expensive, and require on-site experts.*
 - Solution: *We install IoT beacons that stream data into an AI coach for facilities teams.*
 - Tech stack: *Supabase, Next.js, Edge Functions, ESP32 sensors, Gemini API.*
