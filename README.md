@@ -9,6 +9,10 @@ DemoPitch AI is a single-page helper for hackathon teams that need a polished, s
 - Copy-to-clipboard utility and live word/time estimator targeting ~2 minutes (≈250–270 words).
 - Runtime controls for the Gemini API key, hackathon name, and model so you can adapt mid-demo without touching code.
 - Dark ↔ bright theme toggle that remembers your choice locally.
+- Auto-expanding textareas that grow with your prompt so the form never feels cramped.
+- Dedicated team-name field that threads your crew identity through both the live and fallback scripts.
+- Smart Gemini client with API-version retries, suffix guessing, and inline ListModels suggestions when a model alias disappears.
+- Curated model selector grouped by Gemini/Gemma family so you can switch between 2.x stable, previews, and research checkpoints on the fly.
 - Lightweight vanilla HTML/CSS/JS architecture that can be dropped into any static host.
 
 ## Tech stack
